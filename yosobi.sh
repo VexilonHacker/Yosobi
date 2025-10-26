@@ -95,7 +95,7 @@ sanitize_filename() {
         | tr -d '*' \
         | tr -d '"' \
         | tr -d '<' \
-        | tr -d '>' \
+        | tr -d '>' 
 }
 
 save_download_info() {
