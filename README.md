@@ -72,12 +72,15 @@ Options:
   -d, --dir          Override base output directory (Videos/Music)
   -o, --output       Custom output file name (no extension)
   -m, --max-retries  Set maximum retries for format fetching/download (default: 3)
+  -hs, --history      Show download history
   -h, --help         Show this help menu
 
 Examples:
-  ./yosobi -u 'https://youtu.be/FAyKDaXEAgc'
-  ./yosobi --url 'https://youtu.be/FAyKDaXEAgc' --format 247 --max-retries 5
-  ./yosobi -u 'https://youtube.com/playlist?list=...' --format 251 --dir ~/Downloads
+  /usr/local/bin/yosobi -u 'https://youtu.be/FAyKDaXEAgc'
+  /usr/local/bin/yosobi --url 'https://youtu.be/FAyKDaXEAgc' --format 247 --max-retries 5
+  /usr/local/bin/yosobi -u 'https://youtube.com/playlist?list=...' --format 251 --dir ~/Downloads
+  /usr/local/bin/yosobi --history
+
 ```
 
 ---
