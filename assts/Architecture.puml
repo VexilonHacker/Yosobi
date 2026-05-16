@@ -1,0 +1,151 @@
+@startuml
+
+skinparam backgroundColor #ffffff
+skinparam componentStyle rectangle
+skinparam shadowing true
+skinparam roundcorner 10
+
+skinparam rectangle {
+  BackgroundColor #f1f5f9
+  BorderColor #0284c7
+  FontColor #0f172a
+}
+
+skinparam package {
+  BackgroundColor #ffffff
+  BorderColor #059669
+  FontColor #064e3b
+  FontStyle bold
+}
+
+skinparam arrow {
+  Color #64748b
+  Thickness 2
+}
+
+skinparam title {
+  FontColor #0f172a
+  FontSize 18
+  FontStyle bold
+}
+
+package "User Input Layer" {
+  rectangle "CLI Arguments\n(-u, -f, -s, -oo, ...)" as CLI
+  rectangle "Interactive Prompt\n(format code selection)" as PROMPT
+  rectangle "Commands\n(download, play, sleep, info, mpc)" as CMDS
+}
+
+package "Validation & Setup Layer" {
+  rectangle "Dependency Check\n(yt-dlp, ffmpeg, perl, jq, mpv, mpc)" as DEPS
+  rectangle "URL Validation\n(YouTube / Playlist)" as URLVAL
+  rectangle "Directory Setup\n(TMP_DIR, output dirs)" as DIRS
+  rectangle "Signal Traps\n(INT, EXIT)" as TRAPS
+}
+
+package "Format Discovery Layer" {
+  rectangle "Fetch Formats\n(yt-dlp -F + spinner)" as FETCH
+  rectangle "Parse Format Codes\n(audio / video / combined)" as PARSE
+  rectangle "Interactive Selector\n(validate user input)" as SELECT
+  rectangle "Preselected Format\n(-f flag, bypass prompt)" as PRESET
+}
+
+package "Download Engine Layer" {
+  rectangle "Audio Only\n(extract MP3 + thumbnail)" as AUDIO
+  rectangle "Video + Audio\n(concurrent fragments merge)" as VIDAUD
+  rectangle "Combined Format\n(single stream)" as COMBINED
+  rectangle "Subtitle Handler\n(--write-auto-subs, --convert-subs)" as SUBS
+  rectangle "Retry Loop\n(max-retries on failure)" as RETRY
+}
+
+package "Subtitle Processing Layer" {
+  rectangle "Format Detection\n(lrc, vtt, srt, txt)" as SUBFMT
+  rectangle "VTT → TXT Cleaner\n(sed strip tags)" as TXTCLEAN
+  rectangle "Embed Logic\n(vtt/srt → mp4, lrc/txt → file)" as EMBED
+  rectangle "Subs-Only Mode\n(skip media download)" as SUBSONLY
+}
+
+package "Post-Processing Layer" {
+  rectangle "File Move\n(TMP_DIR → output dir)" as MOVE
+  rectangle "Duplicate Handler\n(_counter suffix)" as DUP
+  rectangle "Size Calculation\n(stat / du)" as SIZE
+  rectangle "History Logger\n(JSON append)" as HIST
+}
+
+package "Streaming & Extras Layer" {
+  rectangle "mpv Stream\n(audio or video)" as MPV
+  rectangle "Sleep After Play\n(systemctl suspend)" as SLEEP
+  rectangle "MPD Updater\n(mpc clear + add)" as MPC
+  rectangle "Metadata Info\n(JSON dump + jq filter)" as INFO
+}
+
+package "Output Layer" <<database>> {
+  rectangle "Media Files\n(MP3 / MP4)" as FILES
+  rectangle "Subtitle Files\n(.lrc / .vtt / .srt / .txt)" as SUBFILES
+  rectangle "History JSON\n(~/.yosobi_hist.json)" as HISTFILE
+  rectangle "Terminal Display\n(coloured output)" as TERM
+}
+
+CLI --> CMDS
+PROMPT --> CMDS
+
+CMDS --> DEPS
+DEPS --> URLVAL
+URLVAL --> DIRS
+DIRS --> TRAPS
+
+URLVAL --> FETCH
+FETCH --> PARSE
+PARSE --> SELECT
+PRESET --> SELECT
+
+SELECT --> AUDIO
+SELECT --> VIDAUD
+SELECT --> COMBINED
+
+AUDIO --> SUBS
+VIDAUD --> SUBS
+COMBINED --> SUBS
+
+SUBS --> SUBFMT
+SUBFMT --> TXTCLEAN
+SUBFMT --> EMBED
+SUBSONLY --> SUBFMT
+
+AUDIO --> RETRY
+VIDAUD --> RETRY
+COMBINED --> RETRY
+
+RETRY --> MOVE
+MOVE --> DUP
+DUP --> SIZE
+SIZE --> HIST
+
+HIST --> HISTFILE
+
+MOVE --> FILES
+SUBFMT --> SUBFILES
+
+CMDS --> MPV
+MPV --> SLEEP
+CMDS --> MPC
+CMDS --> INFO
+
+INFO --> TERM
+HIST --> TERM
+FILES --> TERM
+
+package "Performance Characteristics" {
+  rectangle "Format Fetch\n~3 seconds (network)" as PF1
+  rectangle "Audio Download\n~4 MB/s (typical)" as PF2
+  rectangle "Video + Audio\n~15 MB/s (5 fragments)" as PF3
+  rectangle "Subtitle Download\n<1 second" as PF4
+  rectangle "History Write\n<0.1 second" as PF5
+}
+
+FETCH ..> PF1
+AUDIO ..> PF2
+VIDAUD ..> PF3
+SUBS ..> PF4
+HIST ..> PF5
+
+@enduml

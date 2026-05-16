@@ -1,124 +1,169 @@
-# Yosobi - YouTube Downloader Script
-![Yosobi](./assts/Shot-2025-10-21-110644.png)
+# 🎬 Yosobi – The Ultimate YouTube Downloader Script
 
-__`Yosobi`__ is a **Bash script** to download YouTube videos & playlists with **audio extraction**, **video merging**, **thumbnail embedding**, and **smart filename sanitization**. Choose formats interactively or predefine them, set output directories, and retry downloads automatically.  
 
----
+<p align="center">
+  <img src="./assts/yosobi_demo.gif" alt="Yosobi screenshot">
+</p>
 
-## 🚀 Features
-
-- 📹 Download **videos** or **playlists**  
-- 🎵 Extract audio to **MP3** with **thumbnail**  
-- 🎬 Merge **video + audio** into MP4  
-- 🔄 Automatic **retry** for failed downloads  
-- 🗂️ **Custom output directories**  
-- 📝 Logs **download history**  
-- ✨ Interactive or preset **format selection**  
-
-![Yosobi](./assts/view.gif)
+> **Download, stream, lyric‑sync, and manage your YouTube media. all from the terminal >;]**
 
 ---
 
-## ⚙️ Dependencies
+## ✨ Features at a Glance
 
-- `yt-dlp`  
-- `ffmpeg`  
-- `perl`  
-- `jq`  
-
-> 💡 Install via your package manager or `pip` for `yt-dlp`.
+| Category | Features |
+|----------|----------|
+| 🎥 **Video** | Any quality, video+audio merge with concurrent fragments |
+| 🎵 **Audio** | MP3 extraction, embedded thumbnail, metadata tags |
+| 📜 **Subtitles** | VTT, SRT, LRC, clean TXT; embed or keep separate |
+| 🎤 **Subs‑only** | Download subtitles without the media |
+| 🧠 **Format** | Interactive or pre‑selected, automatic fallback |
+| 📂 **Paths** | Exact output path (`-oo`) or directory+name (`-d`/`-o`) |
+| 🖥️ **Streaming** | Play audio/video with `mpv`, optional suspend after |
+| 🎚️ **MPD** | Update playlist alphabetically or newest‑first |
+| 🧾 **History** | JSON log in `~/.yosobi_hist.json` |
+| ℹ️ **Metadata** | Full JSON dump with `jq` filter support |
+| 🔁 **Retry** | Auto‑retry on failure, configurable attempts |
+| 🎨 **UI** | Spinner, coloured output, ASCII logo |
 
 ---
 
-## 🛠️ Installation
+## 🔧 Dependencies
 
-Clone and enter the repo:
+| Tool | Purpose | Required |
+|------|---------|----------|
+| `yt-dlp` | Core downloading engine | ✅ Yes |
+| `ffmpeg` | Audio extraction, video merging, thumbnails | ✅ Yes |
+| `perl` | Coloured format list | Optional |
+| `jq` | Playlist detection, history, `info` command | Optional |
+| `mpv` | `play` and `sleep` commands | Optional |
+| `mpc` | MPD playlist update | Optional |
+
+```bash
+# paru or yay or any other package manager
+sudo paru -S ffmpeg jq perl mpv mpc yt-dlp  # Arch
+sudo apt install ffmpeg jq perl mpv mpc yt-dlp # Debian/Ubuntu
+```
+
+---
+
+## 🚀 Quick Start
 
 ```bash
 git clone https://github.com/VexilonHacker/yosobi.git
 cd yosobi
-```
-
-Make it executable:
-
-```bash
 chmod +x yosobi.sh
-```
 
-Optional: add to PATH:
-
-```bash
+# make the tool accessible system wide
 sudo ln -s $(pwd)/yosobi.sh /usr/local/bin/yosobi
 ```
 
 ---
 
-## 📝 Help menu
+## 📚 Usage
+
+```
+yosobi [command] [options] [url]
+```
+
+Run `yosobi --help` for the full option list, or `yosobi --examples` for advanced usage examples.
+
+### 🎬 Video Downloads
+
 ```bash
+yosobi -f 247 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+yosobi -f 137 -o "My Video" -c 10 'URL'
+```
 
-                                                ░██        ░██
-                                                ░██
-    ░██    ░██  ░███████   ░███████   ░███████  ░████████  ░██
-    ░██    ░██ ░██    ░██ ░██        ░██    ░██ ░██    ░██ ░██
-    ░██    ░██ ░██    ░██  ░███████  ░██    ░██ ░██    ░██ ░██
-    ░██   ░███ ░██    ░██        ░██ ░██    ░██ ░███   ░██ ░██
-     ░█████░██  ░███████   ░███████   ░███████  ░██░█████  ░██
-           ░██
-     ░███████
+### 🎵 Audio + Lyrics
 
-Options:
-  -u, --url          YouTube URL (video or playlist)
-  -f, --format       Preselected format code (e.g. 247, 251)
-  -d, --dir          Override base output directory (Videos/Music)
-  -o, --output       Custom output file name (no extension)
-  -m, --max-retries  Set maximum retries for format fetching/download (default: 3)
-  -hs, --history      Show download history
-  -h, --help         Show this help menu
+```bash
+yosobi -s -sf lrc -f 251 'https://www.youtube.com/watch?v=kJQP7kiw5Fk'
+```
 
-Examples:
-  /usr/local/bin/yosobi -u 'https://youtu.be/FAyKDaXEAgc'
-  /usr/local/bin/yosobi --url 'https://youtu.be/FAyKDaXEAgc' --format 247 --max-retries 5
-  /usr/local/bin/yosobi -u 'https://youtube.com/playlist?list=...' --format 251 --dir ~/Downloads
-  /usr/local/bin/yosobi --history
+### 📁 Exact Output Path
 
+```bash
+yosobi -oo '/home/user/Music/Song.mp3' -f 251 'URL'
+```
+
+### 🎤 Subtitles Only
+
+```bash
+yosobi -s -so -sf txt -o transcript 'URL'
+```
+
+### 🎧 Streaming
+
+```bash
+yosobi play 'URL'
+yosobi play --video 'URL' --start=60
+yosobi sleep 'URL'
+```
+
+### 🔍 Metadata
+
+```bash
+yosobi info 'URL'
+yosobi info 'URL' '.title'
+```
+
+### 🎚️ MPD Integration
+
+```bash
+yosobi mpc
+yosobi mpc --newest
 ```
 
 ---
 
-## 🎵 Playlist Handling
+## 📋 History
 
-Choose per playlist:
+Downloads are logged in `~/.yosobi_hist.json`:
 
-1️⃣ **One format** for all videos  
-2️⃣ **Format individually** per video  
-
----
-
-## 💾 Output
-
-- Audio → **MP3** with thumbnail  
-- Video → **MP4** 
-- Filenames **sanitized**  
-- History in `~/.yosobi_hist.txt`:
-
-```bash
-Date: 2025-10-21 10:35:19
-Video Name: the kid who would do *this* is in jail now.mp3
-URL: https://www.youtube.com/watch?v=A2KbiwDKuw0
-Type: mp3
-Saved Path: /home/user/Music/the kid who would do *this* is in jail now.mp3
-==========================================
+```json
+[
+  {
+    "date": "2025-10-21 10:35:19",
+    "title": "Amazing Song.mp3",
+    "url": "https://www.youtube.com/watch?v=...",
+    "format": "mp3",
+    "path": "/home/user/Music/Amazing Song.mp3"
+  }
+]
 ```
 
+View with `yosobi --history`, clear with `yosobi --clear-history`.
 
 ---
 
-## 📝 License
+## 📐 Architecture
 
-**[MIT License](LICENSE)**  
+![Yosobi Architecture](./assts/Architecture.svg)
+
+Yosobi follows a layered architecture with 8 distinct layers, from user input to final output. The diagram above illustrates the complete data flow through validation, format discovery, download engine, subtitle processing, post‑processing, and streaming components.
+
+## 🖼️ Screenshots
+
+![Yosobi demo](./assts/yosobi.png)
+
+### 📁 Additional Files
+
+| File | Description |
+|------|-------------|
+| [`Architecture.puml`](./assts/Architecture.puml) | PlantUML source for the architecture diagram |
+| [`yosobi.cast`](./assts/yosobi.cast) | Original asciinema recording (replay with `asciinema play`) |
+
+> The `.cast` file can be replayed anytime with `asciinema play ./assts/yosobi.cast` or re‑rendered to GIF/SVG with `agg` / `svg-term`.
+
+
+## 📜 License
+
+**[MIT License](LICENSE)**
 
 ---
 
-
-Enjoy downloading YouTube videos with **`yosobi` ;]** and **Remember to ⭐ start this project if you found it useful!**
-
+<div align="center">
+  Made with ❤️ by <a href="https://github.com/VexilonHacker">VexilonHacker</a><br>
+  ⭐ Star this project if you found it useful ->|^_^|->
+</div>
