@@ -20,7 +20,6 @@ SUBS_FORMAT=""
 SUBS_ONLY=false
 SELECTED_FORMAT_CODE=""
 COMMAND="download"
-USE_PERL=true
 USE_JQ=true
 MPC_NEWEST=false
 
@@ -225,10 +224,6 @@ check_deps() {
         cleanup
         exit 2
     fi
-    if ! command -v perl &>/dev/null; then
-        echo -e "\e[33mNote: perl not found. Format list will not be colored.\e[0m"
-        USE_PERL=false
-    fi
     if ! command -v jq &>/dev/null; then
         echo -e "\e[33mNote: jq not found. Playlist detection, info, history will be limited.\e[0m"
         USE_JQ=false
@@ -392,37 +387,61 @@ fetch_and_display_formats() {
     local ALL_CODES=()
     local attempt=1
     while [ $attempt -le "${MAX_RETRIES:-3}" ]; do
-        if $USE_PERL; then
-            yt-dlp --color always --no-warnings -F "$video_url" > "$RAW_OUTPUT" 2>/dev/null &
-        else
-            yt-dlp --no-warnings -F "$video_url" > "$RAW_OUTPUT" 2>/dev/null &
-        fi
+        yt-dlp --color always --no-warnings -F "$video_url" > "$RAW_OUTPUT" 2>/dev/null &
         local ytdlp_pid=$!
         spinner $ytdlp_pid
         wait $ytdlp_pid
-        if $USE_PERL; then
-            grep -E --color=never "audio only|video only|ID|─|^\s*[0-9]+" "$RAW_OUTPUT" \
-                | perl -pe '
-BEGIN {
-  $esc = "\x1b\[[0-9;]*m";
-  sub inters { my $s = shift; $s =~ s/(.)/$1(?:$esc)*/g; return $s }
-  $p_audio = inters("audio only");
-  $p_video = inters("video only");
-}
-s/^(?:$esc)*ID/   $&/;
-if (/^(?:$esc)*\x{2500}/) { $_ = ""; next }
-s/^(?=(?:$esc)*\d)/\e[1;34m[+]\e[0m /;
-s/($p_audio)/\e[1;32maudio only\e[0m/gi;
-s/($p_video)/\e[1;33mvideo only\e[0m/gi;
-'
-        else
-            grep -E "audio only|video only|ID|─|^\s*[0-9]+" "$RAW_OUTPUT"
-        fi
+        grep -E --color=never "audio only|video only|ID|─|^[[:space:]]*[0-9]+" "$RAW_OUTPUT" \
+            | grep -v "m3u8\|mhtml\|storyboard" \
+            | awk '
+        BEGIN {
+            blue   = "\033[1;34m"
+            green  = "\033[1;32m"
+            yellow = "\033[1;33m"
+            reset  = "\033[0m"
+        }
+
+        {
+            raw = $0
+            clean = raw
+
+            # strip ANSI only for matching
+            gsub(/\033\[[0-9;]*m/, "", clean)
+
+            # header
+            if (clean ~ /^ID/) {
+                print "    " raw
+
+                # blue separator line
+                sep = ""
+                for (i = 1; i <= length(clean) + 8; i++)
+                    sep = sep "─"
+
+                print blue sep reset
+                next
+            }
+
+            # remove original yt-dlp separator
+            if (clean ~ /^[─━]+$/)
+                next
+
+            # add [+]
+            if (clean ~ /^[[:space:]]*[0-9]/)
+                raw = blue "[+]" reset " " raw
+
+            # colors
+            gsub(/audio only/, green "audio only" reset, raw)
+            gsub(/video only/, yellow "video only" reset, raw)
+
+            print raw
+        }
+        '
+            
         local stripped
         stripped=$(sed 's/\x1b\[[0-9;]*m//g' "$RAW_OUTPUT")
         AUDIO_FORMAT_CODES=($(echo "$stripped" | grep "audio only" | awk '{print $1}'))
         VIDEO_FORMAT_CODES=($(echo "$stripped" | grep "video only" | awk '{print $1}'))
-        COMBINED_FORMAT_CODES=($(echo "$stripped" | grep -v "audio only\|video only" | grep -E "^[0-9]+" | awk '{print $1}'))
+        COMBINED_FORMAT_CODES=($(echo "$stripped" | grep -v "audio only\|video only\|m3u8\|mhtml\|storyboard" | grep -E "^[0-9]+" | awk '{print $1}'))
         ALL_CODES=("${AUDIO_FORMAT_CODES[@]}" "${VIDEO_FORMAT_CODES[@]}" "${COMBINED_FORMAT_CODES[@]}")
         if [ ${#ALL_CODES[@]} -gt 0 ]; then
             break

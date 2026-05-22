@@ -36,7 +36,7 @@ package "User Input Layer" {
 }
 
 package "Validation & Setup Layer" {
-  rectangle "Dependency Check\n(yt-dlp, ffmpeg, perl, jq, mpv, mpc)" as DEPS
+  rectangle "Dependency Check\n(yt-dlp, ffmpeg, jq, mpv, mpc)" as DEPS
   rectangle "URL Validation\n(YouTube / Playlist)" as URLVAL
   rectangle "Directory Setup\n(TMP_DIR, output dirs)" as DIRS
   rectangle "Signal Traps\n(INT, EXIT)" as TRAPS

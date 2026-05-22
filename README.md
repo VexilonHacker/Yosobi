@@ -34,15 +34,14 @@
 |------|---------|----------|
 | `yt-dlp` | Core downloading engine | ✅ Yes |
 | `ffmpeg` | Audio extraction, video merging, thumbnails | ✅ Yes |
-| `perl` | Coloured format list | Optional |
 | `jq` | Playlist detection, history, `info` command | Optional |
 | `mpv` | `play` and `sleep` commands | Optional |
 | `mpc` | MPD playlist update | Optional |
 
 ```bash
 # paru or yay or any other package manager
-sudo paru -S ffmpeg jq perl mpv mpc yt-dlp  # Arch
-sudo apt install ffmpeg jq perl mpv mpc yt-dlp # Debian/Ubuntu
+sudo paru -S ffmpeg jq  mpv mpc yt-dlp  # Arch
+sudo apt install ffmpeg jq  mpv mpc yt-dlp # Debian/Ubuntu
 ```
 
 ---
